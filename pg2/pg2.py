@@ -1,10 +1,11 @@
 import math
 import csv
-import logging
 
 data_instance = list()
 data_ins = list()
 calc = list()
+attribute_tree_parent = list()
+attribute_tree_child = list()
 ulabel = set()
 ulabel_dict = dict()
 dict_labelcount = dict()
@@ -12,7 +13,42 @@ features_count = dict()
 features_label_count = dict()
 ent = float(0)
 t = int
+nodes = list()
 
+class Nodes:
+
+    def __init__(self, attribute=None, parent=None, pvalue=None,
+                 child=None, entropy=None):
+        self.attribute = attribute
+        self.parent = parent
+        self.pvalue = pvalue
+        self.child = child
+        self.entropy = entropy
+        self.data_instance = data_instance
+        self.data_instance_length = data_instance_length
+
+    # Get the data instances to be used by the child nodes
+    def getDataInstance(data_instance, pvalue):
+        for di in data_instance:
+            if di[Nodes.attribute] in Nodes.pvalue:
+                Nodes.data_instance.append(di)
+
+        Nodes.data_instance_length = len(Nodes.data_instance)
+        return
+
+
+# Create node from the gain calculated
+def createNode(self, attribute, parent, childs, entropy, data_instance, data_instance_length):
+    global nodes
+    temp_node = Nodes(self, attribute, parent, childs, entropy, data_instance, data_instance_length)
+    nodes.append(temp_node)
+    return
+
+# To get the node child and dita instances for that node
+def getMaxGain(feature_entropy):
+    max_value = max(feature_entropy)
+    max_index = feature_entropy.index(max_value)
+    return max_index;
 
 # Get the feature variables from the list
 def getFeatureVariables(matrix, i):
@@ -94,6 +130,9 @@ for i in range(len(data_instance[0]) - 1):
     feature_entropy.append(calcFeatureEntropy(i, ulabel, data_instance, total_instance))
     print(calcFeatureEntropy(i, ulabel, data_instance, total_instance))
 
+# To create the node getting the values
+att = getMaxGain(feature_entropy)
+
 print(feature_entropy)
 max_value = max(feature_entropy)
 max_index = feature_entropy.index(max_value)
@@ -119,9 +158,14 @@ for l in li:
     print(l)
     print(t)
 
+attribute_index = getMaxGain(feature_entropy)
+attribute_values = list(set(getFeatureVariables(data_instance, attribute_index)))
+
+print (attribute_index)
+print (attribute_values)
 
 
-
-
+node = Nodes(self, attribute_index, None, attribute_values)
+print(node)
 
 
