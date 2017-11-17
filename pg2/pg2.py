@@ -7,6 +7,7 @@ calc = list()
 attribute_tree_parent = list()
 attribute_tree_child = list()
 ulabel = set()
+variable_count = dict()
 ulabel_dict = dict()
 dict_labelcount = dict()
 features_count = dict()
@@ -16,25 +17,94 @@ t = int
 nodes = list()
 
 class Nodes:
+    data_instance = list()
+    data_instance_length = None
+    child = dict()
+    entropy = None
+    gain = None
+    pvalue = None
+    attribute = -1
+    ulabel = None
+    parent = None
 
-    def __init__(self, attribute=None, parent=None, pvalue=None,
-                 child=None, entropy=None):
-        self.attribute = attribute
+    def __init__(self, parent,  data_instance,  attribute):
         self.parent = parent
-        self.pvalue = pvalue
-        self.child = child
-        self.entropy = entropy
         self.data_instance = data_instance
-        self.data_instance_length = data_instance_length
+        self.data_instance_length = len(data_instance)
+        self.attribute = attribute
 
-    # Get the data instances to be used by the child nodes
-    def getDataInstance(data_instance, pvalue):
+    # Get the data instances to be used by the child nodes and the length of the nodes
+    def getDataInstance(self, data_instance, value):
+        new_data_instance = list()
         for di in data_instance:
-            if di[Nodes.attribute] in Nodes.pvalue:
-                Nodes.data_instance.append(di)
+            if di[self.attribute] in value:
+                new_data_instance.append(di)
+        self.data_instance_length = len(new_data_instance)
+        return new_data_instance;
 
-        Nodes.data_instance_length = len(Nodes.data_instance)
+    def getChildNodes(self,pvalue):
+        for value in pvalue:
+            di_temp = list()
+            print(value)
+            di_temp = self.getDataInstance(self.data_instance[:], value)
+            self.ulabel = self.getULables(self.data_instance[:], value)
+            if (len(di_temp) > 1) & (len(self.ulabel) ==1):
+                self.child[value] = Nodes(self, di_temp[:], -1)
+                self.child[value].entropy = 0
+                par = self.child[value].parent
+                while par != None:
+                    par = par.parent
+                    print("parent found")
+            elif len(di_temp) > 1:
+                self.child[value] = Nodes(self, di_temp[:], -1)
+
+
+                # variable_count[di[self.parent.attribute]] = variable_count.get(di[self.parent.attribute], 0) + 1
+
         return
+
+    # Get the unique labels for the data instance and variable value
+    def getULables(self, data_instance, value):
+        for ds in data_instance:
+            if ds[len(ds)-1] in value:
+                ulabel.add(ds[len(ds) - 1])
+            return ulabel;
+
+    # Calculate the entropy
+    def getEntropy(self, fi, ulabel, data_instance, total_instance):
+        global features_count
+        c = len(ulabel)
+        feature_ent = 0.0
+        gain = 0.0
+        svds = 0.0
+        features_count.clear()
+
+        if c == 1:
+            return 1
+
+        # calculating individual features count
+        # features_count.keys() contains the variables for that feature
+        # features_label_count contains the count of the label for a particular variable
+
+        for di in data_instance:
+            features_count[di[fi]] = features_count.get(di[fi], 0) + 1
+        gain = 0.0
+        for f in features_count.keys():
+            features_label_count.clear()
+            for di in data_instance:
+                if f == di[fi]:
+                    features_label_count[di[6]] = features_label_count.get(di[6], 0) + 1
+            pi = 0.0
+            feature_ent = 0.0
+            for fl in features_label_count:
+                pi = (float(features_label_count[fl]) / features_count[f])
+                feature_ent = feature_ent - (pi * math.log(pi, c))
+            svds = float(features_count[f]) / total_instance
+            gain = (svds * feature_ent) + gain
+        gain = ent - gain
+        self.gain = gain
+        return gain
+
 
 
 # Create node from the gain calculated
@@ -111,6 +181,7 @@ def calcFeatureEntropy (fi,ulabel,data_instance,total_instance):
         svds = float(features_count[f])/total_instance
         gain = (svds * feature_ent) + gain
     gain = ent - gain
+
     return gain
 
 
@@ -165,7 +236,36 @@ print (attribute_index)
 print (attribute_values)
 
 
-node = Nodes(self, attribute_index, None, attribute_values)
-print(node)
+node = Nodes(None, data_ins[:], attribute_index)
+node.getChildNodes(attribute_values[:])
+node.pvalue = attribute_values
+print(node.pvalue)
+
+parents = list()
+for val in node.child.keys():
+    par = node.child[val].parent
+    while par != None:
+        if par.attribute != -1:
+            parents.append(par.attribute)
+            print("parent found")
+            par = par.parent
+            continue
+
+        par = par.parent
+print(parents)
+
+for fi in range (len(data_ins)-1):
+    if fi in parents:
+        continue
+    else:
+        for val in node.child.keys():
+            if node.child[val].getEntropy(fi, node.child[val].ulabel, node.child[val].data_instance, node.child[val].data_instance_length) == 1:
+                print("max gain reached")
+                break;
+
+print("end")
+
+
+
 
 
