@@ -28,51 +28,53 @@ class Nodes:
     attribute = -1
     ulabel = None
     parent = None
-    leaflabel = None
+    leaflabel = list()
     childname = None
     def __init__(self, parent,  data_instance,  attribute):
+        # TODO create a parents list node and remove the unused nodes
         self.parent = parent
         self.data_instance = data_instance
         self.data_instance_length = len(data_instance)
         self.attribute = attribute
         self.entropy = -1.0
         self.child = dict()
+        self.ulabel_count = dict()
     # Get the data instances to be used by the child nodes and the length of the nodes
     def getDataInstance(self, data_instance, value):
         new_data_instance = list()
         for di in data_instance:
-            if di[self.attribute] in value:
+            # TODO using "in" list treats high and vhigh the same
+            # below is the fix if di[self.attribute] in value:
+            if value == di[self.attribute] :
                 new_data_instance.append(di)
         return new_data_instance;
 
     def getChildNodes(self,pvalue):
         for value in pvalue:
             di_temp = list()
-            print(value)
-
             di_temp = self.getDataInstance(self.data_instance[:], value)
             # TODO
             if len(di_temp) > 0:
                 self.child[value] = Nodes(self, di_temp[:], -1)
-                self.child[value].ulabel = self.getULables(di_temp[:], value)
+                self.child[value].ulabel = self.getULables(di_temp[:], value, self.child[value].ulabel_count)
                 self.child[value].childname = value
-                print(len(di_temp))
                 # variable_count[di[self.parent.attribute]] = variable_count.get(di[self.parent.attribute], 0) + 1
 
         return
 
     # Get the unique labels for the data instance and variable value
-    # TODO count of unique labels for the childs
-    def getULables(self, data_instance, value=-1):
+    def getULables(self, data_instance, value=-1, ulabel_count=None):
         ulabel = set()
         if value == -1:
             for ds in data_instance:
+                self.ulabel_count[ds[len(ds) - 1]] = self.ulabel_count.get(ds[len(ds) - 1], 0) + 1
                 ulabel.add(ds[len(ds) - 1])
             return ulabel;
         else:
             ulabel.clear()
             for ds in data_instance:
                 if ds[self.attribute] in value:
+                    ulabel_count[ds[len(ds) - 1]] = ulabel_count.get(ds[len(ds) - 1], 0) + 1
                     ulabel.add(ds[len(ds) - 1])
             return ulabel;
 
@@ -106,7 +108,7 @@ class Nodes:
         return feature_ent
 
 
-    # Calculate the entropy
+    # Calculate the gain
     def calcGain(self, fi, ulabel, data_instance, total_instance):
         global features_count
         c = len(ulabel)
@@ -116,6 +118,7 @@ class Nodes:
         features_count.clear()
 
         if c == 1:
+            self.leaflabel = list(ulabel)
             return 1
 
         # calculating individual features count
@@ -129,6 +132,7 @@ class Nodes:
             features_label_count.clear()
             for di in data_instance:
                 if f == di[fi]:
+                    # TODO change index to the index of the label to be generic
                     features_label_count[di[6]] = features_label_count.get(di[6], 0) + 1
             pi = 0.0
             feature_ent = 0.0
@@ -179,13 +183,16 @@ def createDecisionTree(rnode=None):
             par = par.parent
             continue
         par = par.parent
-    print(parents)
 
     # Calculating the entropy
     rnode.entropy = rnode.calcEntropy(len(rnode.data_instance[0]) - 1, rnode.ulabel, rnode.data_instance,
                                       rnode.data_instance_length)
 
     # Calculate the gain of all the child attributes
+    # TODO before calculating gain check if there is only one classifier
+    if len(rnode.ulabel) == 1:
+        rnode.leaflabel = rnode.ulabel
+        return
     for fi in range(len(data_instance[0]) - 1):
         if fi in parents:
             attribute_gains.append(0)
@@ -194,7 +201,9 @@ def createDecisionTree(rnode=None):
             gain_value = rnode.calcGain(fi, rnode.ulabel, rnode.data_instance, rnode.data_instance_length)
             if gain_value == 1:
                 attribute_gains.append(1)
-                break
+                rnode.attribute = fi
+                rnode.leaflabel = rnode.ulabel
+                return
             else:
                 attribute_gains.append(gain_value)
 
@@ -204,24 +213,30 @@ def createDecisionTree(rnode=None):
         rnode.leaflabel = list(rnode.ulabel)
         par = rnode
         while par != None:
-            print(par.attribute)
-            print(par.childname)
             par = par.parent
         return
-    attribute_values = list(set(getFeatureVariables(data_instance, attribute_index)))
-
-    print (attribute_index)
-    print (attribute_values)
+    attribute_values = list(set(getFeatureVariables(rnode.data_instance, attribute_index)))
 
     # Setting the current node attribute i.e naming the current node
     rnode.attribute = attribute_index
+    print("entropy")
+    print (rnode.entropy)
+    print ("parent")
+    print (parents)
+    print ("current node")
+    print (rnode.attribute)
+    print ("node name")
+    print (rnode.childname)
+    print ("node label count")
+    print(rnode.ulabel_count)
+    print ("leaf label")
+    print(rnode.leaflabel)
     # Create child nodes
     rnode.getChildNodes(attribute_values[:])
     if len(rnode.child.keys()) == 0:
         return
     for childnode in rnode.child.keys():
         createDecisionTree(rnode.child[childnode])
-
 
 
 
