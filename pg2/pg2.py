@@ -93,7 +93,7 @@ class Nodes:
             print("stop")
 
         if c == 1:
-            self.entropy = 0
+            self.entropy = 0.0
             return 0
 
         # calculating individual features count
@@ -102,6 +102,15 @@ class Nodes:
 
         for di in data_instance:
             features_count[di[fi]] = features_count.get(di[fi], 0) + 1
+
+# Todo temp fix check
+        feature_ent1 = 0.0
+        for f in features_count.keys():
+            pi = (float(features_count[f]) / total_instance)
+            plogc = pi * math.log(pi, c)
+            feature_ent1 = feature_ent1 - (plogc)
+
+        ####################################
         for f in features_count.keys():
             features_label_count.clear()
             for di in data_instance:
@@ -111,6 +120,12 @@ class Nodes:
                 pi = (float(features_label_count[fl]) / total_instance)
                 feature_ent = feature_ent - (pi * math.log(pi, c))
         self.entropy = feature_ent
+
+        ###################
+
+        if(feature_ent != feature_ent1):
+            print("stop")
+
         return feature_ent
 
 
@@ -208,7 +223,7 @@ def createDecisionTree(rnode=None):
             continue
         else:
             gain_value = rnode.calcGain(fi, rnode.ulabel, rnode.data_instance, rnode.data_instance_length)
-            if gain_value == 1.0:
+            if (gain_value == 1.0) & (len(rnode.ulabel) == 1):
                 attribute_gains.append(1)
                 rnode.attribute = fi
                 rnode.leaflabel = ''.join(rnode.ulabel)
