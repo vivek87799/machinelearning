@@ -2,6 +2,8 @@ import math
 import csv
 
 data_instance = list()
+test_instance = list()
+result_instance = list()
 data_ins = list()
 calc = list()
 attribute_tree_parent = list()
@@ -28,7 +30,7 @@ class Nodes:
     attribute = -1
     ulabel = None
     parent = None
-    leaflabel = list()
+    leaflabel = None
     childname = None
     def __init__(self, parent,  data_instance,  attribute):
         # TODO create a parents list node and remove the unused nodes
@@ -81,10 +83,14 @@ class Nodes:
 
     # Calculate the entropy
     def calcEntropy(self, fi, ulabel, data_instance, total_instance):
+        print(ulabel)
         global features_count
         c = len(ulabel)
         feature_ent = 0.0
         features_count.clear()
+        # TODO for debugging
+        if (total_instance == 4):
+            print("stop")
 
         if c == 1:
             self.entropy = 0
@@ -117,8 +123,11 @@ class Nodes:
         svds = 0.0
         features_count.clear()
 
+# TODO for debugging
+        if(total_instance == 4):
+            print("stop")
         if c == 1:
-            self.leaflabel = list(ulabel)
+            self.leaflabel = ''.join(ulabel)
             return 1
 
         # calculating individual features count
@@ -191,7 +200,7 @@ def createDecisionTree(rnode=None):
     # Calculate the gain of all the child attributes
     # TODO before calculating gain check if there is only one classifier
     if len(rnode.ulabel) == 1:
-        rnode.leaflabel = rnode.ulabel
+        rnode.leaflabel = ''.join(rnode.ulabel)
         return
     for fi in range(len(data_instance[0]) - 1):
         if fi in parents:
@@ -199,10 +208,14 @@ def createDecisionTree(rnode=None):
             continue
         else:
             gain_value = rnode.calcGain(fi, rnode.ulabel, rnode.data_instance, rnode.data_instance_length)
-            if gain_value == 1:
+            if gain_value == 1.0:
                 attribute_gains.append(1)
                 rnode.attribute = fi
-                rnode.leaflabel = rnode.ulabel
+                rnode.leaflabel = ''.join(rnode.ulabel)
+                # TODO remove the below if .. only for debugging
+                if len(rnode.leaflabel) != 1:
+                    print(rnode.ulabel_count)
+                    print("check label")
                 return
             else:
                 attribute_gains.append(gain_value)
@@ -210,7 +223,7 @@ def createDecisionTree(rnode=None):
     # Calculate the max gain to obtain the parent node
     attribute_index = getMaxGain(attribute_gains)
     if attribute_index == -1:
-        rnode.leaflabel = list(rnode.ulabel)
+        rnode.leaflabel = ''.join(rnode.ulabel)
         par = rnode
         while par != None:
             par = par.parent
@@ -219,18 +232,6 @@ def createDecisionTree(rnode=None):
 
     # Setting the current node attribute i.e naming the current node
     rnode.attribute = attribute_index
-    print("entropy")
-    print (rnode.entropy)
-    print ("parent")
-    print (parents)
-    print ("current node")
-    print (rnode.attribute)
-    print ("node name")
-    print (rnode.childname)
-    print ("node label count")
-    print(rnode.ulabel_count)
-    print ("leaf label")
-    print(rnode.leaflabel)
     # Create child nodes
     rnode.getChildNodes(attribute_values[:])
     if len(rnode.child.keys()) == 0:
@@ -240,12 +241,47 @@ def createDecisionTree(rnode=None):
 
 
 
+
 # Sample call
 # Now the node is created and being populated with required data to calc the entropy and gain
 
 rnode = Nodes(None, data_instance[:], -1)
 rnode.ulabel = rnode.getULables(data_instance)
 createDecisionTree(rnode)
+
+
+# TODO use test data to check the classifier
+
+# opening the test file
+with open("cardaten/cartest.data", 'rb') as dataset_file:
+    test_set = csv.reader(dataset_file, delimiter=',')
+    for ds in test_set:
+        test_instance.append(ds)
+
+
+
+
+
+def tester(test=None,rnode=None):
+    if rnode.leaflabel == None:
+        tester(test, rnode.child.get(test[rnode.attribute]))
+        # TODO if there is no node then check classifier rnode.attribute, 'not found')
+    else:
+        print(test)
+        test.append(rnode.leaflabel)
+        print (rnode.leaflabel)
+
+
+for test in test_instance:
+    tester(test,rnode)
+    result_instance.append(test)
+
+# TODO copy result instance to a seperate file
+
+with open('cardaten/carresult.data', 'w') as resultfile:
+    resultwriter = csv.writer(resultfile, delimiter=',')
+    for ri in result_instance:
+        resultwriter.writerow(ri)
 
 
 ################################################################
