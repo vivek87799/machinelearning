@@ -18,8 +18,10 @@ class Nodes:
     and its subtree. Entropy is the calculation of impurity in data"""
     def __init__(self, attribute=None, results=None, value=None,
                  subtree=None, entropy=None, classification_data=None):
+        # attribute contains the name of the node
         self.attribute = attribute
         self.results = results
+        # value contains the variables for the attribute
         self.value = value
         self.subtree = subtree
         self.entropy = entropy
