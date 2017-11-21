@@ -8,17 +8,11 @@ test_instance = list()
 result_instance = list()
 data_ins = list()
 calc = list()
-attribute_tree_parent = list()
-attribute_tree_child = list()
 ulabel = set()
 ulabel_count = dict()
-variable_count = dict()
-ulabel_dict = dict()
-dict_labelcount = dict()
 features_count = dict()
 features_label_count = dict()
 ent = float(0)
-t = int
 nodes = list()
 attribute_gains = list()
 c = int
@@ -63,8 +57,6 @@ class Nodes:
                 self.child[value] = Nodes(self, di_temp[:], -1)
                 self.child[value].ulabel = self.getULables(di_temp[:], value, self.child[value].ulabel_count)
                 self.child[value].nodevalue = value
-                # variable_count[di[self.parent.attribute]] = variable_count.get(di[self.parent.attribute], 0) + 1
-
         return
 
     # Get the unique labels for the data instance and variable value
@@ -234,14 +226,20 @@ def createDecisionTree(rnode=None):
         createDecisionTree(rnode.child[childnode])
 
 
-def createXMLFile(rnode=None ,node1 = None):
-    attr = 'attr' + str(rnode.attribute)
+def createXMLFile(rnode=None, node1=None):
+    if rnode.parent == None:
+        attr = 'attr' + str(rnode.attribute)
+    else:
+        attr = 'attr' + str(rnode.parent.attribute)
     attrname = str(rnode.nodevalue)
     if bool(rnode.child) == False:
-        node = ET.SubElement(node1, "node", classes=str(rnode.ulabel_count), entropy=str(rnode.entropy)).text = str(rnode.leaflabel)
+        node = ET.SubElement(node1, "node", classes=str(rnode.ulabel_count), entropy=str(rnode.entropy))#.text = str(rnode.leaflabel)
+        node.text = str(rnode.leaflabel)
+        node.set(attr, attrname)
+        # node.set("attr" + str(rnode.attribute), attrname)
         return
     node = ET.SubElement(node1, "node", classes=str(rnode.ulabel_count), entropy=str(rnode.entropy))
-    node.set("attr"+str(rnode.attribute), attrname)
+    node.set(attr, attrname)
     for ch in rnode.child.keys():
         createXMLFile(rnode.child.get(ch), node)
     return
