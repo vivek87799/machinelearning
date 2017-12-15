@@ -1,0 +1,662 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<!-- ===================================================================
+  File    : mlp.html
+  Contents: Description of multilayer perceptron programs
+  Author  : Christian Borgelt
+==================================================================== -->
+<html>
+<head>
+<title>Multilayer Perceptron Programs Documentation</title>
+
+<style type="text/css">
+body {
+  min-width:   480px;
+  background:  white;
+  color:       black;
+  font-family: sans-serif;
+  font-size:   10pt;
+}
+tt {
+  font-family: courier;
+  font-size:   10pt;
+}
+img {
+  border:      0px;
+}
+</style>
+</head>
+
+<!-- =============================================================== -->
+
+<body>
+<h1><a name="top">Train and Execute Multilayer Perceptrons</a></h1>
+<h3>(A Brief Documentation of the Programs mlpt / mlpx / mlps)</h3>
+
+<!-- =============================================================== -->
+<p><img src="line.gif" alt="" height=7 width=704></p>
+
+<h3>Contents</h3>
+<ul style="list-style-type:disc">
+<li><a href="#intro">Introduction</a></li>
+<li><a href="#and">Training a Multilayer Perceptron
+                   for the Logical And</a></li>
+<li><a href="#xor">Training a Multilayer Perceptron
+                   for the Exclusive Or</a></li>
+<li><a href="#iris">Training a Multilayer Perceptron
+                    for the Iris Data</a></li>
+<li><a href="#activ">Computation of the Activation Function</a></li>
+<li><a href="#copying">Copying</a></li>
+<li><a href="#download">Download</a></li>
+<li><a href="#contact">Contact</a></li>
+</ul>
+
+<!-- =============================================================== -->
+<p><img src="line.gif" alt="" height=7 width=704></p>
+
+<h3><a name="intro">Introduction</a></h3>
+
+<p>I am sorry that there is no detailed documentation yet. Below you
+can find a brief explanation of how to train a multilayer perceptron
+with the program <tt>mlpt</tt>, how to execute a trained network on
+new data with the program <tt>mlpx</tt>, and how to do a sensitivity
+analysis of a trained network with the program <tt>mlps</tt>.
+For a list of options, call the programs without any arguments.</p>
+
+<p>In the directory <tt>mlp/ex</tt> in the source package you can find
+training pattern sets for two simple logical functions (and / exclusive
+or) and for the well-known iris data (measurements of the sepal length
+/ width and the petal length / width of three types of iris flowers).
+How to train neural networks for these examples is discussed below.</p>
+
+<p>Enjoy,<br>
+<a href="http://www.borgelt.net/">
+Christian Borgelt</a></p>
+
+<table width="100%" border=0 cellpadding=0 cellspacing=0>
+<tr><td style="width:95%" align="right">
+        <a href="#top">back to the top</a></td>
+    <td style="width:5px"></td>
+    <td><a href="#top"><img src="up.gif" alt="top"></a></td></tr>
+</table>
+
+<!-- =============================================================== -->
+<p><img src="line.gif" alt="" height=7 width=704></p>
+
+<h3><a name="and">Training a Multilayer Perceptron
+                  for the Logical And</a></h3>
+
+<p>As a first example let us take a look at the very simple problem
+of training a perceptron so that it computes the logical and. The
+training patterns for the mlpt program are stored in the file
+<tt>and.pat</tt>, which looks like this:</p>
+
+<pre>  0 0 0
+  1 0 0
+  0 1 0
+  1 1 1
+</pre>
+
+<p>The first two columns state the input values, the third column
+states the corresponding output value. To train a multilayer perceptron
+for the logical and, type</p>
+
+<pre>  mlpt -M and.pat and.net</pre>
+
+<p>This will train a perceptron with two input neurons, one output
+neuron and no hidden neurons for 1000 epochs. The option <tt>-M</tt>
+tells the program that the input is a pure numerical matrix and not
+a real data table with column names (see below). You need not specify
+the number of inputs/outputs, because by default the program assumes
+that there is only one output, which is in the last column, while all
+other columns are inputs. The program also assumes by default that
+there is no hidden layer.</p>
+
+<p>The trained network will be written to the file <tt>and.net</tt>,
+which looks like this:</p>
+
+<pre>  units   = 2, 1;
+  scales  = [0.5, 2], [0.5, 2];
+  weights = {{ 2.83695, 2.83693, -2.83692 }};
+  ranges  = [0, 1];
+</pre>
+
+<p>The line starting with <tt>units</tt> lists the number of neurons
+in the different layers, starting with the input layer and ending with
+the output layer. As you can see, there is no hidden layer in this
+network.</p>
+
+<p>The next lines specifies linear transformations to be applied to
+the input values to normalize them to expected value 0 and standard
+deviation 1 (computed as the square root of the maximum likelihood
+estimate for the variance). There is one pair of values for each
+input neuron. The first value is an offset that is subtracted from
+the input value, the second a factor by which the result (input
+minus offset) is multiplied.</p>
+
+<p>After the keyword <tt>weights</tt> the weights of the neurons are
+listed. Since in this network we only have one neuron having weights
+(namely the output neuron; the input neurons do not do any real work),
+we have only three weights: the weights of the two connection from the
+input neurons and the bias value (in this order).</p>
+
+<p>The last line specifies the range of values of the output neuron.
+This range was computed from the training patterns and it is [0, 1],
+because we are dealing with a logical function. Note that if the
+range(s) of values of the output(s) column in the training data
+differ(s) from [0, 1] (the range of values of the logistic function),
+a linear transformation is applied to the output of each output neuron
+to map the interval [0, 1] to the range of values that was found in
+the training pattern set.</p>
+
+<p>The perceptron trained above actually computes the logical and, as
+you can verify by typing</p>
+
+<pre>  mlpx and.net and.pat and.out</pre>
+
+<p>This will compute the sum of squared errors (sse), the mean squared
+error (mse, mean over training patterns), and the root of the mean
+squared error (rmse) for the training patterns, which are (for the
+network above)</p>
+
+<pre>  sse : 0.00919446
+  mse : 0.00229861
+  rmse: 0.0479439
+</pre>
+
+<p>In addition, since an output file was specified, an extended
+pattern file will be written to the file <tt>and.out</tt>.
+It looks like this:</p>
+
+<pre>  0 0 0  0.000201242
+  1 0 0  0.0553624
+  0 1 0  0.0553603
+  1 1 1  0.944641
+</pre>
+
+<p>That is, the set of training patterns has been extended by a fourth
+column, which contains the output of the perceptron for the input
+patterns specified by the values in the first two columns. Of course,
+due to the sigmoid function, the result is not perfect (the values
+produced are not exactly 0 and 1), but the approximation is good
+enough.</p>
+
+<table width="100%" border=0 cellpadding=0 cellspacing=0>
+<tr><td style="width:95%" align="right">
+        <a href="#top">back to the top</a></td>
+    <td style="width:5px"></td>
+    <td><a href="#top"><img src="up.gif" alt="top"></a></td></tr>
+</table>
+
+<!-- =============================================================== -->
+<p><img src="line.gif" alt="" height=7 width=704></p>
+
+<h3><a name="xor">Training a Multilayer Perceptron
+                  for the Exclusive Or</a></h3>
+
+<p>An equally simple approach as studied above for the logical and
+does <i>not</i> work for the exclusive or, i.e., for the input file
+<tt>xor.pat</tt>, which looks like this</p>
+
+<pre>  0 0 0
+  1 0 1
+  0 1 1
+  1 1 0
+</pre>
+
+<p>Training a multilayer perceptron for this problem with</p>
+
+<pre>  mlpt -M xor.pat xor.net</pre>
+
+<p>yields a network looking like this</p>
+
+<pre>  units   = 2, 1;
+  scales  = [0.5, 2], [0.5, 2];
+  weights = {{ 0.000318987, -0.00412534, 0.00176216 }};
+  ranges  = [0, 1];
+</pre>
+
+<p>This network does <i>not</i> solve the problem, as can be seen
+from the fact that the error measures are</p>
+
+<pre>  sse : 1.00001
+  mse : 0.250001
+  rmse: 0.500001
+</pre>
+
+<p>as well as from the output, produced, for instance, with</p>
+
+<pre>  mlpx xor.net xor.pat xor.out</pre>
+
+<p>which looks like this</p>
+
+<pre>  0 0 0  0.501392
+  1 0 1  0.501552
+  0 1 1  0.499329
+  1 1 0  0.499489
+</pre>
+
+<p>That is, no distinction is made between the training patterns.
+Of course, this is due to the fact that a simple perceptron can solve
+only linearly separable problems and the exclusive or is, obviously,
+not linearly separable. To solve this problem, we need a network with
+a hidden layer.</p>
+
+<p>One or more hidden layers can be added to the network with the
+option <tt>-c</tt> followed by a colon-separated list of integer
+numbers. Each of these numbers specifies the number of neurons in a
+hidden layer. That is, <tt>-c2</tt> adds a single hidden layer with
+2 neurons, <tt>-c5:3</tt> adds two hidden layers, one with 5 neurons
+and one with 3 neurons. The layers are assumed to be ordered from the
+input layer towards the output layer.</p>
+
+<p>For the exclusive or problem, a hidden layer with 2 neurons is
+needed, hence you should type</p>
+
+<pre>  mlpt -M -c2 -e5000 xor.pat xor.net</pre>
+
+<p>The option <tt>-e5000</tt> increases the number of training epochs
+from 1000 (the default) to 5000, because it is often the case that the
+exclusive or problem is not solved in 1000 epochs. Note that you may
+combine the two options into <tt>-c2e5000</tt>.</p>
+
+<p>The result is a network like this:</p>
+
+<pre>  units   = 2, 2, 1;
+  scales  = [0.5, 2], [0.5, 2];
+  weights = {{ 3.44362, -3.44365, 3.21714 },
+             { 3.52177, -3.52182, -3.55384 }},
+            {{ -6.89205, 7.1604, 3.19169 }};
+  ranges  = [0, 1];
+</pre>
+
+<p>Here we have three numbers in the list of units, since we added
+a hidden layer with two neurons. The list of weights is expanded
+accordingly. We have two layers of neurons (outer curly braces),
+the first of which contains two neurons having three weights each
+(the inner curly braces group the weights per neuron), the second
+having only one neuron (the output neuron), also with three weights.
+As above, the first numbers in each group are the weights of the
+connection to the predecessor neurons, whereas the last number is
+the bias value.</p>
+
+<p>The performance of this network, measured with</p>
+
+<pre>  mlpx xor.net xor.pat xor.out</pre>
+
+<p>is</p>
+
+<pre>  sse : 0.00642475
+  mse : 0.00160619
+  rmse: 0.0400773
+</pre>
+
+<p>and the output file looks like this:</p>
+
+<pre>  0 0 0  0.0378462
+  1 0 1  0.962613
+  0 1 1  0.953499
+  1 1 0  0.037846
+</pre>
+
+<p>That is, the problem was actually solved.</p>
+
+<p>5000 epochs may appear to be a lot for such a simple problem.
+However, this is due to the fact that the mlpt program uses standard
+backpropagation by default. A faster solution can be achieved by
+adding a momentum term with</p>
+
+<pre>  mlpt -M -c2 -m0.9 xor.pat xor.net</pre>
+
+<p>This sets the momentum factor to 0.9 and thus the program reaches
+a satisfactory solution in a few hundred epochs. (Note again that
+the two options may be combined into <tt>-c2m0.9</tt>.)</p>
+
+<table width="100%" border=0 cellpadding=0 cellspacing=0>
+<tr><td style="width:95%" align="right">
+        <a href="#top">back to the top</a></td>
+    <td style="width:5px"></td>
+    <td><a href="#top"><img src="up.gif" alt="top"></a></td></tr>
+</table>
+
+<!-- =============================================================== -->
+<p><img src="line.gif" alt="" height=7 width=704></p>
+
+<h3><a name="iris">Training a Neural Network for the Iris Data</a></h3>
+
+<p>Let us now take a look at the more complex problem of training a
+multilayer perceptron for the iris data. To train such a network,
+type</p>
+
+<pre>  mlpt -M -c3 -U3 iris.pat iris.net</pre>
+
+<p>The <tt>-c3</tt> adds a hidden layer with 3 neurons, just as
+described above. The <tt>-U3</tt> states that there should be three
+output neurons, one neuron for each of the three classes of iris
+flowers. (Note that the file with the training patterns has seven
+columns, the first four of which state the input values, while the
+last three code the class with a 1-in-n code.)</p>
+
+<p>The resulting network looks like this</p>
+
+<pre>  units   = 4, 3, 3;
+  scales  = [5.84333, 1.21168], [3.05733, 2.30197], [3.758, 0.568374],
+            [1.19933, 1.31632];
+  weights = {{ 0.878782, -1.11655, 1.753, 1.93157, 2.34027 },
+             { -1.16471, 1.76549, -2.04974, -2.99973, -2.84079 },
+             { -0.727816, -1.62847, 6.83127, 7.75607, -10.1281 }},
+            {{ -3.61975, 6.45599, -3.85032, -1.43268 },
+             { 3.21068, -6.26839, -9.754, 1.13484 },
+             { -0.810291, -3.11402, 9.66869, -3.46732 }};
+  ranges  = [0, 1], [0, 1], [0, 1];
+</pre>
+
+<p>and it solves the problem fairly well, as can be seen from the
+measurements computed by</p>
+
+<pre>  mlpx iris.net iris.pat iris.out</pre>
+
+<p>which are</p>
+
+<pre>  sse : 3.70898
+  mse : 0.0247265
+  rmse: 0.157247
+</pre>
+
+<p>Inspecting the output file reveals that only three training patterns
+are misclassified (if each input pattern is assigned to the class with
+the largest activation).</p>
+
+<p>Although standard backpropagation training works very well for
+the iris data, there is a better approach, namely the more flexible
+resilient backpropagation method. This method can be chosen with the
+<tt>-a</tt> option. The list of training methods, from which you may
+choose with the <tt>-a</tt> option is:
+
+<pre>  bkprop      standard backpropagation
+  supersab    super self-adaptive backpropagation
+  rprop       resilient backpropagation
+  quick       quick backpropagation
+  manhattan   Manhattan training
+</pre>
+
+<p>Hence, to train a multilayer perceptron with resilient
+backpropagation type</p>
+
+<pre>  mlpt -M -arprop -k0c3o3 iris.pat iris.net</pre>
+
+<p>Note that there is also the additional option <tt>-k0</tt>. This
+option specifies that the weights of the network should be updated
+only once for each epoch, namely after a full traversal of all
+training patterns. This additional option is necessary, because
+resilient backpropagation does not work well for online training.</p>
+
+<p>In general the <tt>-k</tt> option specifies the number of patterns
+that should be processed before the weights are updated. As already
+explained above a value of 0 means that the weights are updated only
+once per epoch (batch training). The default is to update the weights
+after each training pattern (online training). <tt>-k10</tt> means
+that the weights are updated every 10 training patterns. Hence, with
+the option <tt>-k</tt>, a gradual transition between pure online
+training (update after each training pattern) and pure batch training
+(update only once per epoch) can be achieved.</p>
+
+<p>Sometimes the problem arises that the initial number of training
+epochs was chosen too low, so that the trained network is not good
+enough w.r.t. the given problem. An already trained network may be
+improved by specifying the file it is contained in as a third
+argument to the program mlpt. That is, for instance,</p>
+
+<pre>  mlpt -M -e2000 iris.pat iris.new iris.old</pre>
+
+<p>takes the already trained network stored in the file
+<tt>iris.old</tt>, trains it for 2000 epochs with the patterns
+in the file <tt>iris.pat</tt>, and stores the result in the file
+<tt>iris.new</tt>. Note that the options <tt>-c</tt>, <tt>-U</tt>,
+and <tt>-w</tt> are ignored if an already trained network is given.
+Note also that the new network file may or may not have the same
+name as the old one.</p>
+
+<table width="100%" border=0 cellpadding=0 cellspacing=0>
+<tr><td style="width:95%" align="right">
+        <a href="#top">back to the top</a></td>
+    <td style="width:5px"></td>
+    <td><a href="#top"><img src="up.gif" alt="top"></a></td></tr>
+</table>
+
+<!-- =============================================================== -->
+<p><img src="line.gif" alt="" height=7 width=704></p>
+
+<h3><a name="input">More General Input Data</a></h3>
+
+<p>Up to now we always used the option <tt>-M</tt> to tell the
+program <tt>mlpt</tt> that the input is a numerical matrix. Without
+this option real data tables (with column names etc.) are possible.
+The main differences are:</p>
+
+<ul style="list-style-type:disc">
+<li>Input patterns are not restricted to numeric values, but may also
+    contain nominal values. Note that the first line of such a more
+    general pattern table should contain attribute names. If it does
+    not, use either <tt>-d</tt> to generate default names or <tt>-h</tt>
+    to read the attribute names from another file. How the values are
+    interpreted is determined by a domain definition file, which must
+    be given as a first argument to the program <tt>mlpt</tt>. (See
+    the table package, especially the program <tt>dom</tt>, for more
+    explanations about this.) Attributes that are not listed in the
+    domain definition file are not used. Nominal attributes are
+    automatically recoded into numeric ones using a 1-in-n code.</li>
+<li>Instead of a number of target columns the name of a target attribute
+    is specified with the option <tt>-o</tt>. If no target attribute is
+    specified, the attribute listed last in the domain definition file
+    is used as the target. The target attribute may be numeric or
+    nominal. If it is nominal, it is automatically recoded using a
+    1-in-n code (like all symbolic attributes).</li>
+<li>The program <tt>mlpx</tt> evaluates the output of the network and
+    automatically decodes the result, so that a nominal value is
+    computed if the target attribute is nominal. This makes the two
+    programs <tt>mlpt</tt> and <tt>mlpx</tt> very convenient to use if
+    you want to solve a classification or prediction problem.</li>
+</ul>
+<p>Example: The command</p>
+
+<pre>  mlpt -c2k0 -aquick iris.dom iris.tab iris.net</pre>
+
+<p>trains a multilayer perceptron with two hidden neurons for the iris
+data using resilient backpropagation. The result looks like this:</p>
+
+<pre>  /*--------------------------------------------------------------------
+    domains
+  --------------------------------------------------------------------*/
+  dom(sepal_length) = IR;
+  dom(sepal_width) = IR;
+  dom(petal_length) = IR;
+  dom(petal_width) = IR;
+  dom(iris_type) = { Iris-setosa, Iris-versicolor, Iris-virginica };
+
+  /*--------------------------------------------------------------------
+    multilayer perceptron
+  --------------------------------------------------------------------*/
+  mlp(iris_type) = {
+    units   = 4, 2, 3;
+    scales  = [5.84333, 1.21168], [3.05733, 2.30197], [3.758, 0.568374],
+              [1.19933, 1.31632];
+    weights = {{ 2.14492, -14.671, 33.8793, 59.3337, 42.8929 },
+               { 1.02566, 0.814512, -7.29516, -3.16734, 6.34753 }},
+              {{ -101.809, 36.3122, 1.11674 },
+               { 15.3094, 19.9228, -24.0699 },
+               { 13.4884, -60.6794, 12.9485 }};
+    ranges  = [0, 1], [0, 1], [0, 1];
+  };
+</pre>
+
+<p>This network leads to only one misclassification (0.67%), as can be
+verified with the command</p>
+
+<pre>  mlpx iris.net iris.tab</pre>
+
+<table width="100%" border=0 cellpadding=0 cellspacing=0>
+<tr><td style="width:95%" align="right">
+        <a href="#top">back to the top</a></td>
+    <td style="width:5px"></td>
+    <td><a href="#top"><img src="up.gif" alt="top"></a></td></tr>
+</table>
+
+<!-- =============================================================== -->
+<p><img src="line.gif" alt="" height=7 width=704></p>
+
+<h3><a name="sens">Sensitivity Analysis</a></h3>
+
+<p>The program mlps do a sensitivity analysis of a trained network
+on a given dataset (which may or may not be the dataset the network
+was trained on). Both programs compute the partial derivative of
+the outputs w.r.t. to the inputs for each input patterns. By default
+the maximum of these values for the different output neurons is used
+to assess how sensitive the outputs react to changes in the inputs.
+With the option <tt>-s</tt> the sum over the output units can be used
+instead of the maximum. The resulting values are summed over all
+training patterns.</p>
+
+<table width="100%" border=0 cellpadding=0 cellspacing=0>
+<tr><td style="width:95%" align="right">
+        <a href="#top">back to the top</a></td>
+    <td style="width:5px"></td>
+    <td><a href="#top"><img src="up.gif" alt="top"></a></td></tr>
+</table>
+
+<!-- =============================================================== -->
+<p><img src="line.gif" alt="" height=7 width=704></p>
+
+<h3><a name="activ">Computation of the Activation Function</a></h3>
+
+<p>By changing the makefile, you can activate a table based computation
+of the logistic activation function of the neurons, which can lead to
+much lower training times. To compile the programs in this way,
+activate the line</p>
+
+<pre>  CFLAGS = $(CFBASE) -DNDEBUG -O3 -DMLP_TABFN</pre>
+
+<p>in the makefile. (The definition of <tt>MLP_TABFN</tt> does the
+trick.) The table contains the values of the logistic function for
+1024 equidistant points in the range 0 to 16. You may change the
+argument range or the number of points by adapting the definitions of
+<tt>TABMAX</tt> and <tt>TABSIZE</tt> in the file <tt>mlp/src/mlp.c</tt>.
+
+<p>It is also possible to compile the programs so that they use the
+<i>tangens hyperbolicus</i> as the activation function of the neurons.
+To get this version, activate the line</p>
+
+<pre>  CFLAGS = $(CFBASE) -DNDEBUG -O3 -DMLP_TANH</pre>
+
+<p>in the makefile. (The definition of <tt>MLP_TANH</tt> changes the
+activation function to tanh.) There is also a table based version of
+this, which can be activated with</p>
+
+<pre>  CFLAGS = $(CFBASE) -DNDEBUG -O3 -DMLP_TANH -DMLP_TABFN</pre>
+
+<p>There is a theoretical argument in favor of the tangens
+hyperbolicus: the output of a neuron is much less likely to be
+(close to) zero, which is desirable, since an output of zero means
+that the connection weights to the successor neurons do not get
+adapted. In practice, however, the logistic function usually leads
+to better results. I have not completely figured out the reasons
+for this yet.</p>
+
+<p>Note that the initial weight range and the learning rate are
+changed to 0.5 and 0.05, respectively, if the tangens hyperbolicus
+is used. These changes are made to compensate for the different
+properties of the tangens hyperbolicus compared to the logistic
+function.</p>
+
+<table width="100%" border=0 cellpadding=0 cellspacing=0>
+<tr><td style="width:95%" align="right">
+        <a href="#top">back to the top</a></td>
+    <td style="width:5px"></td>
+    <td><a href="#top"><img src="up.gif" alt="top"></a></td></tr>
+</table>
+
+<!-- =============================================================== -->
+<p><img src="line.gif" alt="" height=7 width=704></p>
+
+<h3><a name="copying">Copying</a></h3>
+
+<p>mlpt/mlpx/mlps - train and execute multilayer perceptrons<br>
+   copyright &copy; 1996-2016 Christian Borgelt</p>
+
+<p>(MIT license, or more precisely Expat License;
+to be found in the file <tt>mit-license.txt</tt> in the directory
+<tt>mlp/doc</tt> in the source package of the program, see also
+<a href="http://www.opensource.org/licenses/MIT">opensource.org</a> and
+<a href="http://en.wikipedia.org/wiki/MIT_license">wikipedia.org</a>)
+</p>
+
+<p>Permission is hereby granted, free of charge, to any person
+obtaining a copy of this software and associated documentation
+files (the "Software"), to deal in the Software without restriction,
+including without limitation the rights to use, copy, modify, merge,
+publish, distribute, sublicense, and/or sell copies of the Software,
+and to permit persons to whom the Software is furnished to do so,
+subject to the following conditions:</p>
+
+<p>The above copyright notice and this permission notice shall be
+included in all copies or substantial portions of the Software.</p>
+
+<p>THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
+BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
+ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.</p>
+
+<table width="100%" border=0 cellpadding=0 cellspacing=0>
+<tr><td style="width:95%" align="right">
+        <a href="#top">back to the top</a></td>
+    <td style="width:5px"></td>
+    <td><a href="#top"><img src="up.gif" alt="top"></a></td></tr>
+</table>
+
+<!-- =============================================================== -->
+<p><img src="line.gif" alt="" height=7 width=704></p>
+
+<h3><a name="download">Download</a></h3>
+
+<p><a href="http://www.borgelt.net/mlp.html">
+Download page</a> with most recent version.</p>
+
+<table width="100%" border=0 cellpadding=0 cellspacing=0>
+<tr><td style="width:95%" align="right">
+        <a href="#top">back to the top</a></td>
+    <td style="width:5px"></td>
+    <td><a href="#top"><img src="up.gif" alt="top"></a></td></tr>
+</table>
+
+<!-- =============================================================== -->
+<p><img src="line.gif" alt="" height=7 width=704></p>
+
+<h3><a name="contact">Contact</a></h3>
+
+<table border=0 cellpadding=0 cellspacing=0>
+<tr><td valign="top">E-mail:</td><td style="width:10px"></td>
+    <td><a href="mailto:christian@borgelt.net">
+        christian@borgelt.net</a><br>
+<tr><td valign="top">Website:</td><td></td>
+    <td><a href="http://www.borgelt.net/">
+        www.borgelt.net</a><br>
+</table>
+
+<table width="100%" border=0 cellpadding=0 cellspacing=0>
+<tr><td style="width:95%" align="right">
+        <a href="#top">back to the top</a></td>
+    <td style="width:5px"></td>
+    <td><a href="#top"><img src="up.gif" alt="top"></a></td></tr>
+</table>
+
+<!-- =============================================================== -->
+<p><img src="line.gif" alt="" height=7 width=704></p>
+
+<address>&copy; 2002-2007
+<a href="mailto:christian@borgelt.net">Christian Borgelt</a>
+</address>
+</body>
+</html>

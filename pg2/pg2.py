@@ -1,7 +1,6 @@
 import math
 import csv
 import xml.etree.ElementTree as ET
-from io import BytesIO
 
 data_instance = list()
 test_instance = list()
@@ -16,6 +15,7 @@ ent = float(0)
 nodes = list()
 attribute_gains = list()
 c = int
+len_instance = int
 
 class Nodes:
     data_instance = list()
@@ -129,7 +129,7 @@ class Nodes:
             for di in data_instance:
                 if f == di[fi]:
                     # TODO change index to the index of the label to be generic
-                    features_label_count[di[6]] = features_label_count.get(di[6], 0) + 1
+                    features_label_count[di[len_instance - 1]] = features_label_count.get(di[len_instance - 1], 0) + 1
             pi = 0.0
             feature_ent = 0.0
             for fl in features_label_count:
@@ -167,6 +167,7 @@ with open("cardaten/car.data", 'rb') as dataset_file:
         ulabel.add(ds[len(ds)-1])
 total_instance = len(data_instance)
 c = len(ulabel)
+len_instance = len(data_instance[0])
 feature_entropy = list()
 
 #Creating the tree
@@ -253,43 +254,9 @@ rnode = Nodes(None, data_instance[:], -1)
 rnode.ulabel = rnode.getULables(data_instance)
 createDecisionTree(rnode)
 
-
-# TODO use test data to check the classifier
-#"""
-# opening the test file
-with open("cardaten/cartest.data", 'rb') as dataset_file:
-    test_set = csv.reader(dataset_file, delimiter=',')
-    for ds in test_set:
-        test_instance.append(ds)
-
-def tester(test=None,rnode=None):
-    if rnode.child.get(test[rnode.attribute]) == None:
-        test.append(rnode.leaflabel)
-        return
-    if rnode.leaflabel == None:
-        tester(test, rnode.child.get(test[rnode.attribute]))
-        # TODO if there is no node then check classifier rnode.attribute, 'not found')
-    else:
-        test.append(rnode.leaflabel)
-
-tl = 0
-for test in test_instance:
-    tester(test,rnode)
-    result_instance.append(test)
-    tl = tl + 1
-    if(tl > 1713):
-        tl = tl + 1
-
-# TODO copy result instance to a seperate file
-
-with open('cardaten/carresult.data', 'w') as resultfile:
-    resultwriter = csv.writer(resultfile, delimiter=',')
-    for ri in result_instance:
-        resultwriter.writerow(ri)
 #"""
 # TODO generate the xml file
 
-f = BytesIO()
 attrname = str(rnode.nodevalue)
 root = ET.Element("tree", classes=str(rnode.ulabel_count), entropy=str(rnode.entropy))
 tree = ET.ElementTree(root)
