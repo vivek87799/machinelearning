@@ -1,11 +1,10 @@
 import csv
 
 data_instance = list()
-data_ins = list()
-ulabel = set()
 labelcounter = dict()
 nodes = dict()
-
+filepath = "../cardaten/car.data"
+k = 1
 
 class Node:
     label_name = ""
@@ -19,54 +18,64 @@ class Node:
 
 
 # opening the data file
-with open("../cardaten/car.data", 'rb') as dataset_file:
+with open(filepath, 'rb') as dataset_file:
     data_set = csv.reader(dataset_file, delimiter=',')
     for ds in data_set:
         data_instance.append(ds)
-        ulabel.add(ds[len(ds) - 1])
+        labelcounter[ds[len(ds) - 1]] = labelcounter.get(ds[len(ds) - 1], 0) + 1
 total_instance = len(data_instance)
-c = len(ulabel)
 label_pos = len(data_instance[0]) - 1
 
+
 # Classifier
-for di in data_instance:
-    labelcounter[di[label_pos]] = labelcounter.get(di[label_pos], 0) + 1
+def bayesClassifier():
+    for label in labelcounter:
+        nodes[label] = Node(label, labelcounter[label])
 
-for label in labelcounter:
-    nodes[label] = Node(label, labelcounter[label])
-    print label
-
-for di in data_instance:
-    cnode = nodes[di[label_pos]]
-    for i in range(len(di) - 1):
-        try:
-            _feature = cnode.attribute[i]
-        except:
-            _feature = {}
-        _feature[di[i]] = _feature.get(di[i], 0) + 1
-        cnode.attribute[i] = _feature
-
-print nodes['acc'].attribute[0]['high']
+    for di in data_instance:
+        cnode = nodes[di[label_pos]]
+        for i in range(len(di) - 1):
+            try:
+                _feature = cnode.attribute[i]
+            except:
+                _feature = {}
+            _feature[di[i]] = _feature.get(di[i], 0) + 1
+            cnode.attribute[i] = _feature
 
 
 # Predictor
 def predictLabel(nodes, instance=None):
+    # TODO use laplace smoothing
+    maxval = 0.0
     for n in nodes:
         i = 0
         val = 0.0
-        val = (nodes[n].label_count / float(total_instance))
+        maxval = 0.0
+        val = ((nodes[n].label_count + k)/ ((float(total_instance)) + (k * len(nodes))))
         for d in instance:
             try:
-                val = val + (nodes[n].attribute[i][d] / float(nodes[n].label_count))
+                val = val * ((nodes[n].attribute[i][d] + k) / ((float(nodes[n].label_count)) + (k * len(nodes[n].attribute[i]))))
             except:
-                val = 0
+                val = val * ((k) / (float(nodes[n].label_count)) + (k * len(nodes[n].attribute[i])))
                 break
             i += 1
-        print n
-        print val
+        if val > maxval:
+            maxval = val
+            print maxval
+            label = nodes[n].label_name
+            print label
+
+    return label
 
 
+# Calling the classifier
+bayesClassifier()
+# med ,low ,2 ,4 ,med ,high
 test_instance = ['vhigh' ,'low' ,'3' ,'4' ,'big' ,'high']
-test_instance = ['low' ,'high' ,'3' ,'more' ,'big' ,'high']
-predictLabel(nodes, test_instance)
+test_instance = ['med' ,'low' ,'2' ,'4' ,'med' ,'high']
+label = predictLabel(nodes, test_instance)
+print label
 print("classified")
+
+
+
