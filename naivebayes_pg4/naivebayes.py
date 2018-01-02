@@ -1,7 +1,7 @@
 import csv
 import random
 
-K = 0.1
+K = 0.014
 filepath = "../cardaten/car.data"
 data_instance = list()
 labelcounter = dict()
@@ -18,13 +18,19 @@ class Node:
         self.label_count = label_count
         self.attribute = dict()
 
+
 # Split the data into test data, training data
 def splitData (data_instance):
     random.shuffle(data_instance)
+    print len(data_instance)
     train_data = data_instance[:int(len(data_instance) * (2 / 3.0))]
+    print len(data_instance)
     print len(train_data)
     test_data = data_instance[int(len(data_instance) * (2 / 3.0)):]
+    print len(test_data)
+    print len(test_data)
     return train_data, test_data
+
 
 # Calculate error rate
 def calcErrorRate():
@@ -73,17 +79,12 @@ def predictLabel(nodes, test_data, instance=None):
             # Checks if the probability is max then gives the label for that max
             if val > maxval:
                 maxval = val
-                print maxval
                 label = nodes[n].label_name
-                print label
-            else:
-                print "persist"
         if td[len(td)-1] != label:
             e += 1
         td.append(label)
         # test_data.insert(index, td)
-        print index
-    print "error is"
+    print "error"
     print e
     return label
 
