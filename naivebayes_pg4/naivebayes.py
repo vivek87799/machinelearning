@@ -1,7 +1,7 @@
 import csv
 import random
 
-K = 0.014
+K = 0.01
 filepath = "../cardaten/car.data"
 data_instance = list()
 labelcounter = dict()
@@ -22,19 +22,15 @@ class Node:
 # Split the data into test data, training data
 def splitData (data_instance):
     random.shuffle(data_instance)
-    print len(data_instance)
     train_data = data_instance[:int(len(data_instance) * (2 / 3.0))]
-    print len(data_instance)
-    print len(train_data)
     test_data = data_instance[int(len(data_instance) * (2 / 3.0)):]
-    print len(test_data)
-    print len(test_data)
     return train_data, test_data
 
 
 # Calculate error rate
 def calcErrorRate():
     return
+
 
 # Classifier
 # Creates the likelihood table
@@ -71,8 +67,6 @@ def predictLabel(nodes, test_data, instance=None):
                                                                                                                 i]))))
                 except:
                     val = val * (K / (float(nodes[n].label_count)) + (K * len(nodes[n].attribute[i])))
-                    # val = 0
-                    # break
                 i += 1
                 if i >= len(td)-1:
                     break
@@ -83,14 +77,38 @@ def predictLabel(nodes, test_data, instance=None):
         if td[len(td)-1] != label:
             e += 1
         td.append(label)
-        # test_data.insert(index, td)
     print "error"
     print e
-    return label
+    er = (float(e)/len(test_data)) * 100
+    return label, er
+
+
+# Error rate calculator
+# er is the error rate
+def errorRateCalculator():
+    random.shuffle(train_data)
+    sample_data = train_data[:100]
+    label, er = predictLabel(nodes, sample_data)
+    return sample_data
+
+
+# Creating a confusion matrix
+def confusionMatrix():
+    a = len(labelcounter) + 1
+    cf_matrix = [[int(0) for x in range(a)] for y in range(a)]
+    i = 0
+    for l in labelcounter:
+        i = i + 1
+        cf_matrix[0][i] = l
+        cf_matrix[i][0] = l
+    cflist = labelcounter.keys()
+    for cf in sample_data:
+        cf_matrix[cflist.index(cf[len(cf) - 2])+1][cflist.index(cf[len(cf) - 1])+1] = cf_matrix[cflist.index(cf[len(cf) - 2])+1][cflist.index(cf[len(cf) - 1])+1] + 1
+    return cf_matrix
 
 
 # opening the data file
-with open(filepath, 'rb') as dataset_file:
+with open(filepath, 'r') as dataset_file:
     data_set = csv.reader(dataset_file, delimiter=',')
     for ds in data_set:
         data_instance.append(ds)
@@ -105,8 +123,11 @@ bayesClassifier(train_data)
 test_instance = ['vhigh', 'low', '3', '4', 'big', 'high']
 test_instance = ['med' ,'low' ,'2' ,'4' ,'med' ,'high']
 # Send the node along with the nodes obtained from classifier and the test instance
-label = predictLabel(nodes, test_data)
-print label
+label, er = predictLabel(nodes, test_data)
+# To calculate the error rate
+sample_data = errorRateCalculator()
+cf_matrix = confusionMatrix()
+print er
 print("classified")
 
 
